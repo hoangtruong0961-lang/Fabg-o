@@ -255,7 +255,53 @@ export const getAiClient = (settings?: AppSettings, forceDirect: boolean = false
             throw new Error(`Proxy Error (${response.status}): ${err || response.statusText}`);
           }
 
-          const data = await response.json();
+          const responseText = await response.text();
+          let data: any = {};
+          try {
+            data = JSON.parse(responseText);
+          } catch (e) {
+            // Robust parsing for possible buffered SSE stream response containing [DONE]
+            const lines = responseText.split('\n');
+            let accumulatedText = "";
+            for (const line of lines) {
+              const cleanLine = line.trim();
+              if (!cleanLine || cleanLine === 'data: [DONE]' || cleanLine === '[DONE]' || cleanLine.includes('[DONE]')) continue;
+              if (cleanLine.startsWith('data: ')) {
+                try {
+                  const chunkJson = JSON.parse(cleanLine.substring(6).trim());
+                  const content = chunkJson.choices?.[0]?.delta?.content || chunkJson.choices?.[0]?.message?.content || "";
+                  accumulatedText += content;
+                } catch (innerErr) {
+                  // Ignore partial parse failures
+                }
+              }
+            }
+            if (accumulatedText) {
+              data = {
+                choices: [
+                  {
+                    message: {
+                      content: accumulatedText
+                    }
+                  }
+                ]
+              };
+            } else {
+              // Extract standard fallback JSON block if any exists
+              const firstBrace = responseText.indexOf('{');
+              const lastBrace = responseText.lastIndexOf('}');
+              if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+                try {
+                  data = JSON.parse(responseText.substring(firstBrace, lastBrace + 1));
+                } catch (e2) {
+                  throw new Error(`Phản hồi không phải JSON hợp lệ: ${responseText}`);
+                }
+              } else {
+                throw new Error(`Phản hồi không chứa JSON hợp lệ: ${responseText}`);
+              }
+            }
+          }
+
           const text = data.choices?.[0]?.message?.content || "";
           
           return {
@@ -391,10 +437,10 @@ export const getAiClient = (settings?: AppSettings, forceDirect: boolean = false
 
             for (const line of lines) {
               const cleanLine = line.trim();
-              if (!cleanLine || cleanLine === 'data: [DONE]') continue;
+              if (!cleanLine || cleanLine === 'data: [DONE]' || cleanLine === '[DONE]' || cleanLine.includes('[DONE]')) continue;
               if (cleanLine.startsWith('data: ')) {
                 try {
-                  const json = JSON.parse(cleanLine.substring(6));
+                  const json = JSON.parse(cleanLine.substring(6).trim());
                   const content = json.choices?.[0]?.delta?.content || "";
                   const usage = json.usage;
                   
@@ -483,6 +529,41 @@ export const getAiClient = (settings?: AppSettings, forceDirect: boolean = false
           targetUrl = url.replace(googleBase, baseUrl!);
         }
 
+        // Helper to convert Headers (including Headers instance) to a plain object
+        const headersObj: Record<string, string> = {};
+        if (options.headers) {
+          if (options.headers instanceof Headers) {
+            options.headers.forEach((value, key) => {
+              headersObj[key] = value;
+            });
+          } else if (Array.isArray(options.headers)) {
+            options.headers.forEach(([key, value]) => {
+              headersObj[key] = value;
+            });
+          } else {
+            Object.entries(options.headers).forEach(([key, value]) => {
+              if (value !== undefined && value !== null) {
+                headersObj[key] = String(value);
+              }
+            });
+          }
+        }
+
+        // Safe body parsing to handle non-string or unparseable bodies
+        let parsedBody: any = undefined;
+        if (options.body) {
+          try {
+            if (typeof options.body === 'string') {
+              parsedBody = JSON.parse(options.body);
+            } else {
+              parsedBody = options.body;
+            }
+          } catch (e) {
+            console.warn('[AI Client] Failed to parse options.body as JSON, using as-is:', e);
+            parsedBody = options.body;
+          }
+        }
+
         // Use local backend proxy to bypass CORS
         return fetch('/api/ai/proxy', {
           method: 'POST',
@@ -493,8 +574,8 @@ export const getAiClient = (settings?: AppSettings, forceDirect: boolean = false
           body: JSON.stringify({
             url: targetUrl,
             method: options.method || 'POST',
-            headers: options.headers,
-            body: options.body ? JSON.parse(options.body as string) : undefined
+            headers: headersObj,
+            body: parsedBody
           })
         });
       }

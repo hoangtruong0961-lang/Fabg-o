@@ -33,6 +33,17 @@ async function startServer() {
     try {
       // console.log(`[Backend Proxy] 🚀 Forwarding request to: ${url}`);
       
+      const isStream = !!body?.stream || 
+                       (url && typeof url === 'string' && (
+                         url.includes(':streamGenerateContent') || 
+                         url.includes('/stream') || 
+                         url.includes('stream=true')
+                       )) ||
+                       (headers && (
+                         headers['Accept']?.includes('event-stream') || 
+                         headers['accept']?.includes('event-stream')
+                       ));
+
       const response = await axios({
         url,
         method: method || 'POST',
@@ -44,7 +55,7 @@ async function startServer() {
           'origin': undefined
         },
         data: body,
-        responseType: body?.stream ? 'stream' : 'json',
+        responseType: isStream ? 'stream' : 'json',
         validateStatus: () => true // Don't throw on error status codes
       });
 
@@ -55,7 +66,7 @@ async function startServer() {
 
       res.status(response.status);
 
-      if (body?.stream) {
+      if (isStream) {
         response.data.pipe(res);
       } else {
         res.json(response.data);

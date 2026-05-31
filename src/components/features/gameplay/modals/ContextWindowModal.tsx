@@ -12,6 +12,7 @@ import { useTheme } from '../../../../context/ThemeContext';
 import { useResponsive } from '../../../../hooks/useResponsive';
 import { ContextDebuggerView } from '../components/ContextDebuggerView';
 import { WorldData, ContextWindowConfig, AppSettings, ChatMessage, PresetModelConfig } from '../../../../types';
+import { getAiClient } from '../../../../services/ai/client';
 
 const CATEGORIES = ['🎭 Đóng vai', '✍️ Văn phong', '🔥 Độ khó', '🗣️ Đối thoại', '⚙️ Cấu trúc'];
 const PRIORITIES = ['🔴 TUYỆT ĐỐI', '🟡 LINH HOẠT', '🟢 KHUYẾN NGHỊ'];
@@ -945,7 +946,8 @@ const ContextWindowModal: React.FC<ContextWindowModalProps> = ({
                 .map(r => `[LUẬT LỆ: ${r.title}] (Độ Cưỡng Chế: ${r.priority}) - ${r.content}`)
                 .join('\n');
 
-            const payload = {
+            const aiClient = getAiClient(settings);
+            const response = await aiClient.models.generateContent({
                 model: settings?.aiModel || "gemini-3.5-flash",
                 contents: [
                     { role: 'user', parts: [{ text: simulatorInput }] }
@@ -954,21 +956,12 @@ const ContextWindowModal: React.FC<ContextWindowModalProps> = ({
                     systemInstruction: `Bạn là mô hình kiểm thử RPG chính văn. Hãy trả lời câu hỏi của người chơi, đồng thời tuân thủ TUYỆT ĐỐI các luật lệ bối cảnh cưỡng chế sau đây:\n\n${activeRulesText || "Không có luật lệ nào."}`,
                     temperature: 0.7
                 }
-            };
-
-            const response = await fetch('/api/ai/proxy', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
             });
 
-            if (response.ok) {
-                const data = await response.json();
-                const text = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Không có câu trả lời.';
-                setSimulatorOutput(text);
+            if (response && response.text) {
+                setSimulatorOutput(response.text);
             } else {
-                const errorData = await response.json();
-                setSimulatorOutput(`⚠️ Lỗi giả lập (Phản hồi từ API): ${errorData.error || 'Server error'}`);
+                setSimulatorOutput('Không có câu trả lời từ trợ lý AI giả lập.');
             }
         } catch (error: any) {
             setSimulatorOutput(`⚠️ Thất bại kết nối giả lập: ${error.message}`);
