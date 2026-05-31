@@ -12,12 +12,15 @@ import { DIFFICULTY_LEVELS, OUTPUT_LENGTHS } from '../../../constants/promptTemp
 
 interface SettingsScreenProps extends NavigationProps {
   fromGame?: boolean;
+  initialTab?: string;
 }
 
-const SettingsScreen: React.FC<SettingsScreenProps> = ({ onNavigate, fromGame }) => {
+const SettingsScreen: React.FC<SettingsScreenProps> = ({ onNavigate, fromGame, initialTab }) => {
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<'general' | 'display' | 'game' | 'advanced' | 'api' | 'custom-theme'>('general');
+  const [activeTab, setActiveTab] = useState<'general' | 'display' | 'game' | 'advanced' | 'api' | 'custom-theme'>(
+    (initialTab as any) || 'general'
+  );
   
   const { 
     setTheme, setFontFamily, setFontSize, setVisualEffects, setLayoutZoom,

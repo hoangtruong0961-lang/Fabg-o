@@ -1,127 +1,80 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-export const ArkLogo = ({ size = 100, className = '' }) => {
+interface ArkLogoProps {
+  size?: number;
+  className?: string;
+}
+
+export const ArkLogo: React.FC<ArkLogoProps> = ({ size = 100, className = '' }) => {
   return (
-    <motion.svg
-      width={size}
-      height={size}
-      viewBox="0 0 100 100"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className={className}
-      initial={{ scale: 0.9 }}
-      animate={{ 
-        scale: [1, 1.05, 1],
-        filter: [
-          'drop-shadow(0 0 10px rgba(56,189,248,0.5))',
-          'drop-shadow(0 0 25px rgba(56,189,248,0.8))',
-          'drop-shadow(0 0 10px rgba(56,189,248,0.5))'
-        ]
-      }}
-      transition={{ 
-        duration: 4, 
-        repeat: Infinity, 
-        ease: "easeInOut" 
+    <div 
+      className={`${className} relative flex items-center justify-center rounded-full select-none transition-all duration-500`}
+      style={{ 
+        width: size, 
+        height: size,
       }}
     >
-      {/* Outer rotating rays */}
-      <motion.g
-        animate={{ rotate: 360 }}
-        transition={{ duration: 16, repeat: Infinity, ease: "linear" }}
-        style={{ transformOrigin: "50px 50px" }}
-      >
-        {/* Sun rays represented by stylized petals/rays */}
-        {[...Array(12)].map((_, i) => (
-          <motion.path
-            key={i}
-            d="M48.5 12L50 2L51.5 12L50 22Z"
-            fill="currentColor"
-            transform={`rotate(${i * 30} 50 50)`}
-            animate={{
-              opacity: [0.6, 1, 0.6]
-            }}
-            transition={{
-              duration: 2,
-              repeat: Infinity,
-              delay: i * 0.1,
-              ease: "easeInOut"
-            }}
+      {/* Outer Neumorphic Extruded Circle (Embossed Plate) */}
+      <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#eae7e4] to-[#c3beba] dark:from-[#0e182e] dark:to-[#04060c] shadow-[6px_6px_14px_rgba(176,171,168,0.75),-6px_-6px_14px_rgba(255,255,255,0.95)] dark:shadow-[8px_8px_18px_rgba(1,3,7,0.9),-8px_-8px_18px_rgba(21,33,59,0.8)] border border-white/40 dark:border-white/5" />
+
+      {/* Inner Neumorphic Recessed Circle (Sunken Plate) */}
+      <div className="absolute w-[80%] h-[80%] rounded-full bg-gradient-to-br from-[#c3beba] to-[#eae7e4] dark:from-[#03050a] dark:to-[#101c34] shadow-[inset_4px_4px_8px_rgba(176,171,168,0.75),inset_-4px_-4px_8px_rgba(255,255,255,0.95)] dark:shadow-[inset_4px_4px_10px_rgba(1,3,7,0.9),inset_-4px_-4px_10px_rgba(21,33,59,0.8)] border border-black/5 dark:border-white/5 flex items-center justify-center overflow-hidden">
+        
+        {/* Subtle radial sheen overlay for material feel */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.25),transparent_60%)] dark:bg-[radial-gradient(circle_at_30%_30%,rgba(56,189,248,0.06),transparent_60%)]" />
+
+        {/* Minimalist Logo Symbol (Sleek minimalist Ark ship + Sun combination) */}
+        <motion.svg
+          width="52%"
+          height="52%"
+          viewBox="0 0 100 100"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          className="relative z-10 text-sky-500 dark:text-sky-400"
+          animate={{
+            scale: [1, 1.05, 1],
+            opacity: [0.9, 1, 0.9],
+          }}
+          transition={{
+            duration: 4,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        >
+          {/* Minimalist Sun disc in the center-top */}
+          <circle 
+            cx="50" 
+            cy="40" 
+            r="13" 
+            className="fill-sky-500/10 dark:fill-sky-400/15 stroke-sky-500 dark:stroke-sky-400" 
+            strokeWidth="2.5" 
           />
-        ))}
-        {/* Smaller secondary rays */}
-        {[...Array(12)].map((_, i) => (
-          <motion.path
-            key={`s-${i}`}
-            d="M49 20L50 12L51 20L50 26Z"
-            fill="currentColor"
-            fillOpacity="0.5"
-            transform={`rotate(${i * 30 + 15} 50 50)`}
+          
+          {/* Subtle sunrays as minimalist anchors */}
+          <line x1="50" y1="18" x2="50" y2="23" className="stroke-sky-500 dark:stroke-sky-400" strokeWidth="2.5" strokeLinecap="round" />
+          <line x1="27" y1="40" x2="32" y2="40" className="stroke-sky-500 dark:stroke-sky-400" strokeWidth="2.5" strokeLinecap="round" />
+          <line x1="73" y1="40" x2="68" y2="40" className="stroke-sky-500 dark:stroke-sky-400" strokeWidth="2.5" strokeLinecap="round" />
+          <line x1="34" y1="24" x2="38" y2="28" className="stroke-sky-500 dark:stroke-sky-400" strokeWidth="2.5" strokeLinecap="round" />
+          <line x1="66" y1="24" x2="62" y2="28" className="stroke-sky-500 dark:stroke-sky-400" strokeWidth="2.5" strokeLinecap="round" />
+
+          {/* Minimalist geometric crescent shape representing the ARK */}
+          <path
+            d="M20 62C20 62 35 73 50 73C65 73 80 62 80 62C80 62 65 67 50 67C35 67 20 62 20 62Z"
+            className="fill-sky-500 dark:fill-sky-400 stroke-sky-500 dark:stroke-sky-400"
+            strokeWidth="1.5"
+            strokeLinejoin="round"
           />
-        ))}
-      </motion.g>
 
-      {/* Middle rotating dashed ring */}
-      <motion.circle 
-        cx="50" 
-        cy="50" 
-        r="34" 
-        stroke="currentColor" 
-        strokeWidth="1.5" 
-        strokeOpacity="0.4" 
-        strokeDasharray="4 8"
-        animate={{ rotate: -360 }}
-        transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-        style={{ transformOrigin: "50px 50px" }}
-      />
-
-      {/* Center Sun Core */}
-      <motion.circle
-        cx="50"
-        cy="50"
-        r="24"
-        fill="rgba(56,189,248,0.15)"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeOpacity="0.8"
-      />
-      <motion.circle
-        cx="50"
-        cy="50"
-        r="16"
-        fill="currentColor"
-        animate={{
-          scale: [1, 1.15, 1],
-          opacity: [0.8, 1, 0.8]
-        }}
-        transition={{
-          duration: 3,
-          repeat: Infinity,
-          ease: "easeInOut"
-        }}
-      />
-      
-      {/* Inner glowing effect */}
-      <motion.circle
-        cx="50"
-        cy="50"
-        r="8"
-        fill="rgba(255,255,255,0.8)"
-        animate={{ opacity: [0.5, 1, 0.5] }}
-        transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-      />
-
-      {/* Small floating particles around center */}
-      <motion.g
-        animate={{ rotate: 360 }}
-        transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-        style={{ transformOrigin: "50px 50px" }}
-      >
-        <circle cx="50" cy="18" r="2.5" fill="currentColor" />
-        <circle cx="50" cy="82" r="2.5" fill="currentColor" />
-        <circle cx="18" cy="50" r="2.5" fill="currentColor" />
-        <circle cx="82" cy="50" r="2.5" fill="currentColor" />
-      </motion.g>
-    </motion.svg>
+          {/* Symmetrical support line anchor below the ship */}
+          <path
+            d="M32 78H68"
+            className="stroke-sky-500/60 dark:stroke-sky-400/50"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+          />
+        </motion.svg>
+      </div>
+    </div>
   );
 };

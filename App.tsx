@@ -18,6 +18,7 @@ function App() {
   const activeWorld = useAppStore(state => state.activeWorld);
   const importedSetup = useAppStore(state => state.importedSetup);
   const isSettingsFromGame = useAppStore(state => state.isSettingsFromGame);
+  const selectedSettingsTab = useAppStore(state => state.selectedSettingsTab);
   
   const handleNavigate = useAppStore(state => state.navigate);
   const handleGameStart = useAppStore(state => state.startGame);
@@ -57,6 +58,7 @@ function App() {
         <SettingsScreen 
             onNavigate={handleNavigate} 
             fromGame={isSettingsFromGame} 
+            initialTab={selectedSettingsTab || undefined}
         />
       )}
 

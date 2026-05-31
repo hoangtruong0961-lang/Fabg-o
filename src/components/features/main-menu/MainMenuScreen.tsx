@@ -25,7 +25,9 @@ import {
   ShieldCheck,
   AlertCircle,
   HardDrive,
-  ArrowLeft
+  ArrowLeft,
+  Palette,
+  Paintbrush
 } from 'lucide-react';
 import { useDatabaseStatus } from '../../../hooks/useDatabaseStatus';
 import { useTheme } from '../../../context/ThemeContext';
@@ -51,7 +53,17 @@ const itemVariants: Variants = {
 };
 
 const MainMenuScreen: React.FC<NavigationProps> = ({ onNavigate, onGameStart }) => {
-  const { theme, toggleTheme } = useTheme();
+  const { 
+    theme, 
+    setTheme, 
+    useCustomTheme, 
+    setUseCustomTheme, 
+    customThemes, 
+    activeCustomThemeId, 
+    setActiveCustomThemeId 
+  } = useTheme();
+  
+  const [showThemeDropdown, setShowThemeDropdown] = useState(false);
   const [isIntroing, setIsIntroing] = useState(true);
   
   useEffect(() => {
@@ -460,23 +472,141 @@ const MainMenuScreen: React.FC<NavigationProps> = ({ onNavigate, onGameStart }) 
         />
       )}
 
-      {/* Button đổi theme đẩy top bên trái trên cùng */}
+      {/* Button đổi theme đẩy top bên trái trên cùng kèm Dropdown */}
       {!isIntroing && (
-        <button 
-          onClick={toggleTheme}
-          aria-label="Toggle light dark mode"
-          className={`absolute top-4 left-4 md:top-6 md:left-6 z-50 w-11 h-11 rounded-full flex items-center justify-center transition-all duration-300 active:scale-95 cursor-pointer ${
-            theme === 'light'
-              ? 'bg-[#e6ebf4] shadow-[4px_4px_8px_#cbd2df,-4px_-4px_8px_#ffffff] hover:shadow-[inset_2px_2px_4px_#cbd2df,inset_-2px_-2px_4px_#ffffff] text-slate-700'
-              : 'bg-[#0b1329] shadow-[4px_4px_8px_#030610,-4px_-4px_8px_#142042] hover:shadow-[inset_2px_2px_4px_#030610,inset_-2px_-2px_4px_#142042] text-amber-500'
-          }`}
-        >
-          {theme === 'light' ? (
-            <Moon size={20} className="text-zinc-700" />
-          ) : (
-            <Sun size={20} className="text-amber-400" />
-          )}
-        </button>
+        <div className="absolute top-4 left-4 md:top-6 md:left-6 z-50">
+          <button 
+            onClick={() => setShowThemeDropdown(!showThemeDropdown)}
+            aria-label="Chọn Theme"
+            className={`w-11 h-11 rounded-full flex items-center justify-center transition-all duration-300 active:scale-95 cursor-pointer ${
+              theme === 'light' || theme === 'pastel' || theme === 'clay'
+                ? 'bg-[#e6ebf4] shadow-[4px_4px_8px_#cbd2df,-4px_-4px_8px_#ffffff] hover:shadow-[inset_2px_2px_4px_#cbd2df,inset_-2px_-2px_4px_#ffffff] text-slate-700'
+                : 'bg-[#0b1329] shadow-[4px_4px_8px_#030610,-4px_-4px_8px_#142042] hover:shadow-[inset_2px_2px_4px_#030610,inset_-2px_-2px_4px_#142042] text-amber-500'
+            }`}
+          >
+            {useCustomTheme ? (
+              <Palette size={20} className="text-violet-500 animate-pulse" />
+            ) : theme === 'pastel' ? (
+              <Palette size={20} className="text-pink-400" />
+            ) : theme === 'clay' ? (
+              <Palette size={20} className="text-orange-400" />
+            ) : theme === 'light' ? (
+              <Moon size={20} className="text-zinc-700" />
+            ) : (
+              <Sun size={20} className="text-amber-400" />
+            )}
+          </button>
+
+          <AnimatePresence>
+            {showThemeDropdown && (
+              <>
+                <div 
+                  className="fixed inset-0 z-40 bg-transparent cursor-default"
+                  onClick={() => setShowThemeDropdown(false)}
+                />
+                <motion.div
+                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                  transition={{ duration: 0.15 }}
+                  className={`absolute top-14 left-0 z-50 w-64 p-3 rounded-2xl flex flex-col gap-1.5 shadow-xl border cursor-default ${
+                    theme === 'light' || theme === 'pastel' || theme === 'clay'
+                      ? 'bg-[#e6ebf4] border-white/50 text-slate-800 shadow-[#0000000d]'
+                      : 'bg-[#0b1329] border-white/5 text-slate-100 shadow-[#0000004d]'
+                  }`}
+                >
+                  <div className="px-2 py-1 text-xs font-semibold uppercase tracking-wider opacity-60 text-left">
+                    Theme Mặc Định
+                  </div>
+
+                  {[
+                    { id: 'light', name: 'Nền Sáng (Light Theme)', icon: Sun, color: 'text-yellow-500' },
+                    { id: 'dark', name: 'Nền Tối (Dark Theme)', icon: Moon, color: 'text-amber-400' },
+                    { id: 'pastel', name: 'Pastel / Kem Cát Ấm', icon: Palette, color: 'text-emerald-400' },
+                    { id: 'clay', name: 'Clay / Earthy trầm', icon: Paintbrush, color: 'text-orange-400' }
+                  ].map((item) => {
+                    const Icon = item.icon;
+                    const isActive = !useCustomTheme && theme === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => {
+                          setUseCustomTheme(false);
+                          setTheme(item.id as any);
+                          setShowThemeDropdown(false);
+                        }}
+                        className={`w-full px-3 py-2 rounded-xl flex items-center justify-between text-left transition-all duration-200 hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer ${
+                          isActive ? 'font-semibold bg-black/5 dark:bg-white/10' : ''
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <Icon size={16} className={item.color} />
+                          <span>{item.name}</span>
+                        </div>
+                        {isActive && <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />}
+                      </button>
+                    );
+                  })}
+
+                  {/* Custom themes group */}
+                  {customThemes.length > 0 && (
+                    <>
+                      <div className="border-t border-black/10 dark:border-white/10 my-1" />
+                      <div className="px-2 py-1 text-xs font-semibold uppercase tracking-wider opacity-60 text-left">
+                        Theme Tùy Chỉnh
+                      </div>
+                      {customThemes.map((ct) => {
+                        const isActive = useCustomTheme && activeCustomThemeId === ct.id;
+                        return (
+                          <button
+                            key={ct.id}
+                            onClick={async () => {
+                              setUseCustomTheme(true);
+                              setActiveCustomThemeId(ct.id);
+                              try {
+                                const s = await dbService.getSettings();
+                                await dbService.saveSettings({ ...s, useCustomTheme: true, activeCustomThemeId: ct.id });
+                              } catch (err) {
+                                console.error(err);
+                              }
+                              setShowThemeDropdown(false);
+                            }}
+                            className={`w-full px-3 py-2 rounded-xl flex items-center justify-between text-left transition-all duration-200 hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer ${
+                              isActive ? 'font-semibold bg-black/5 dark:bg-white/10' : ''
+                            }`}
+                          >
+                            <div className="flex items-center gap-2.5">
+                              <div 
+                                className="w-3.5 h-3.5 rounded-full border border-black/10 dark:border-white/10 shadow-sm"
+                                style={{ backgroundColor: ct.primaryColor }}
+                              />
+                              <span className="truncate max-w-[150px]">{ct.name}</span>
+                            </div>
+                            {isActive && <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />}
+                          </button>
+                        );
+                      })}
+                    </>
+                  )}
+
+                  <div className="border-t border-black/10 dark:border-white/10 my-1" />
+
+                  {/* Create Custom Theme Trigger */}
+                  <button
+                    onClick={() => {
+                      setShowThemeDropdown(false);
+                      onNavigate(GameState.SETTINGS, 'custom-theme');
+                    }}
+                    className="w-full px-3 py-2 rounded-xl flex items-center gap-2.5 text-left transition-all duration-200 hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer text-sky-500 dark:text-sky-400 font-medium"
+                  >
+                    <Paintbrush size={16} />
+                    <span>Tạo Theme Mới</span>
+                  </button>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
+        </div>
       )}
 
       {/* Cài đặt App đẩy top bên phải trên cùng */}
@@ -508,38 +638,49 @@ const MainMenuScreen: React.FC<NavigationProps> = ({ onNavigate, onGameStart }) 
       <AnimatePresence>
         {isIntroing && (
           <motion.div 
-            className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#050505] backdrop-blur-md"
+            className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#e6ebf4] dark:bg-[#0b1329] transition-colors duration-500"
             initial={{ opacity: 1 }}
             exit={{ opacity: 0, transition: { duration: 0.8, ease: "easeInOut" } }}
           >
+            {/* Neumorphic Loading Panel Card */}
             <motion.div 
-              initial={{ scale: 0.8, opacity: 0, filter: 'blur(10px)' }}
-              animate={{ scale: 1, opacity: 1, filter: 'blur(0px)' }}
-              exit={{ scale: 1.1, opacity: 0, filter: 'blur(10px)' }}
-              transition={{ duration: 1.2, ease: "easeOut" }}
-              className="flex flex-col items-center justify-center gap-8"
+              initial={{ scale: 0.85, opacity: 0, y: 15 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 1.05, opacity: 0, y: -15 }}
+              transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+              className="w-[325px] p-10 rounded-[40px] bg-gradient-to-br from-[#eae7e4] to-[#c3beba] dark:from-[#0e182e] dark:to-[#04060c] shadow-[12px_12px_24px_rgba(176,171,168,0.7),-12px_-12px_24px_rgba(255,255,255,0.95)] dark:shadow-[14px_14px_28px_rgba(1,3,7,0.9),-14px_-14px_28px_rgba(21,33,59,0.8)] border border-white/40 dark:border-white/5 flex flex-col items-center justify-center gap-7 transition-colors duration-500"
             >
-              <motion.div layoutId="ark-main-logo" className="text-mystic-accent">
-                <ArkLogo size={180} />
+              <motion.div 
+                layoutId="ark-main-logo" 
+                className="text-mystic-accent"
+                animate={{ y: [0, -4, 0] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <ArkLogo size={140} />
               </motion.div>
               
-              <div className="flex flex-col items-center gap-3">
-                <h1 className="font-serif text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-slate-100 to-slate-400 tracking-[0.3em]">
+              <div className="flex flex-col items-center gap-5">
+                <h2 className="font-serif text-sm font-extrabold text-[#584964]/80 dark:text-[#a0afca]/90 tracking-[0.4em] select-none uppercase">
                   LOADING...
-                </h1>
-                <motion.div 
-                  className="h-[2px] w-48 bg-slate-800 rounded-full overflow-hidden relative shadow-[0_0_10px_rgba(56,189,248,0.2)]"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.4 }}
-                >
-                  <motion.div 
-                    className="absolute top-0 left-0 bottom-0 bg-gradient-to-r from-mystic-accent/50 via-mystic-accent to-mystic-accent/50 shadow-[0_0_15px_rgba(56,189,248,0.8)]"
-                    initial={{ width: "0%" }}
-                    animate={{ width: "100%" }}
-                    transition={{ duration: 2.2, ease: "easeInOut" }}
+                </h2>
+                
+                {/* Neumorphic Circular Rotating Loader Track */}
+                <div className="relative w-14 h-14 rounded-full bg-gradient-to-br from-[#c3beba] to-[#eae7e4] dark:from-[#03050a] dark:to-[#101c34] shadow-[inset_3px_3px_6px_rgba(176,171,168,0.75),inset_-3px_-3px_6px_rgba(255,255,255,0.95)] dark:shadow-[inset_3px_3px_8px_rgba(1,3,7,0.95),inset_-3px_-3px_8px_rgba(21,33,59,0.8)] border border-black/5 dark:border-white/5 flex items-center justify-center">
+                  
+                  {/* Primary clockwise glowing spin arc */}
+                  <motion.div
+                    className="absolute w-[80%] h-[80%] rounded-full border-2 border-transparent border-t-sky-500 dark:border-t-sky-400 border-r-sky-500/30 dark:border-r-sky-400/30"
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
                   />
-                </motion.div>
+                  
+                  {/* Secondary counter-clockwise accent spin arc */}
+                  <motion.div
+                    className="absolute w-[55%] h-[55%] rounded-full border-2 border-transparent border-b-sky-500/60 dark:border-b-sky-300/40 border-l-sky-500/20 dark:border-l-sky-300/20"
+                    animate={{ rotate: -360 }}
+                    transition={{ duration: 1.8, repeat: Infinity, ease: "linear" }}
+                  />
+                </div>
               </div>
             </motion.div>
           </motion.div>
