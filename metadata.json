@@ -1,0 +1,8 @@
+{
+  "name": "Remix: Remix: Remix: 6.5",
+  "description": "",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
